@@ -101,7 +101,7 @@ const mockUsers: User[] = [
   },
   {
     id: "2",
-    email: "rahul.sharma@iitd.ac.in",
+    email: "student@iitd.ac.in",
     name: "Rahul Sharma",
     role: "student",
     college: "Indian Institute of Technology Delhi",
@@ -801,7 +801,7 @@ const mockCandidates: Candidate[] = [
   {
     id: "2",
     name: "Rahul Sharma",
-    email: "rahul.sharma@iitd.ac.in",
+    email: "student@iitd.ac.in",
     title: "Software Engineer",
     location: "New Delhi, Delhi",
     experience: "2 years",
