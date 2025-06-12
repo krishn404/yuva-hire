@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { mockApiClient } from "@/lib/mock-api"
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,43 +10,13 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.substring(7)
-
-    // Mock token validation
-    if (!token.startsWith("mock-token-")) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    const response = await mockApiClient.getMe()
+    
+    if (!response.success) {
+      return NextResponse.json({ error: response.error }, { status: 401 })
     }
 
-    // Extract user ID from token
-    const userId = token.split("-")[2]
-
-    // Mock user data based on token
-    const mockUsers = {
-      "1": {
-        id: "1",
-        email: "student@iitd.ac.in",
-        name: "Rahul Sharma",
-        role: "student" as const,
-        college: "IIT Delhi",
-        department: "Computer Science & Engineering",
-        student_id: "2021CS10001",
-      },
-      "2": {
-        id: "2",
-        email: "admin@iitd.ac.in",
-        name: "Dr. Priya Patel",
-        role: "admin" as const,
-        college: "IIT Delhi",
-        department: "Placement Office",
-      },
-    }
-
-    const user = mockUsers[userId as keyof typeof mockUsers]
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    return NextResponse.json({ user })
+    return NextResponse.json(response.data)
   } catch (error) {
     console.error("Auth verification error:", error)
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
