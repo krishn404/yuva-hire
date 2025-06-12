@@ -1,33 +1,35 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { verifyToken } from "./auth"
+import { mockApiClient } from "./mock-api"
 
-export function withAuth(handler: (req: NextRequest, user: any) => Promise<NextResponse>) {
-  return async (req: NextRequest) => {
+export const withAuth = (handler: Function) => {
+  return async (req: NextRequest, ...args: any[]) => {
     try {
-      const token = req.headers.get("authorization")?.replace("Bearer ", "")
-
+      const token = req.headers.get("authorization")?.split(" ")[1]
       if (!token) {
-        return NextResponse.json({ error: "No token provided" }, { status: 401 })
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      const payload = verifyToken(token)
-      if (!payload) {
-        return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      const response = await mockApiClient.getMe()
+      if (!response.success) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       }
 
-      return handler(req, payload)
+      return handler(req, response.data.user, ...args)
     } catch (error) {
-      return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
+      console.error("Auth middleware error:", error)
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
   }
 }
 
-export function withRole(roles: string[]) {
-  return (handler: (req: NextRequest, user: any) => Promise<NextResponse>) =>
-    withAuth(async (req: NextRequest, user: any) => {
+export const withRole = (roles: string[]) => {
+  return (handler: Function) => {
+    return withAuth(async (req: NextRequest, user: any, ...args: any[]) => {
       if (!roles.includes(user.role)) {
-        return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
       }
-      return handler(req, user)
+
+      return handler(req, user, ...args)
     })
+  }
 }

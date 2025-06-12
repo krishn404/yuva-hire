@@ -1,34 +1,23 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { mockApiClient } from "@/lib/mock-api"
 
-export async function POST(req: NextRequest) {
+export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json()
-    const { email, password, name, role, college, department, studentId } = body
+    const { name, email, password, role, college } = body
 
-    if (!email || !password || !name || !role || !college) {
-      return NextResponse.json({ error: "All required fields must be filled" }, { status: 400 })
+    if (!name || !email || !password || !role || !college) {
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 })
     }
 
-    // Mock registration logic
-    const newUser = {
-      id: `user-${Date.now()}`,
-      email,
-      name,
-      role,
-      college,
-      department,
-      student_id: studentId,
+    const response = await mockApiClient.register(body)
+    if (!response.success) {
+      return NextResponse.json({ error: response.error }, { status: 400 })
     }
 
-    // Generate a simple token
-    const token = `mock-token-${newUser.id}-${Date.now()}`
-
-    return NextResponse.json({
-      user: newUser,
-      token,
-    })
+    return NextResponse.json(response.data)
   } catch (error) {
-    console.error("Register API error:", error)
-    return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 })
+    console.error("Register error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
